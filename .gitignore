@@ -1,3 +1,11 @@
+# unflappy specific:
+.env
+dac.json
+build/
+
+# other 
+.DS_STORE
+
 # Logs
 logs
 *.log
