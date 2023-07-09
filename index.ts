@@ -27,9 +27,13 @@ const run = async () => {
 
     const censusTract = getDacFeature(coordinates)
     const loadServingEntity = getElectricLoadServingEntityFeature(coordinates)
+    const airDistrict = getCaAirDistrictFeature(coordinates)
+    const cleanCitiesCoalition = getCleanCitiesCoalitionFeature(coordinates)
 
     console.log(censusTract)
     console.log(loadServingEntity)
+    console.log(airDistrict)
+    console.log(cleanCitiesCoalition)
 
     generatePDF(address, censusTract.properties)
 }
@@ -64,6 +68,22 @@ const getElectricLoadServingEntityFeature = (coordinates: number[]) => {
     return loadEntity
 }
 
+const getCaAirDistrictFeature = (coordinates: number[]) => {
+    const projectedCoordinates = proj4.default(PROJECTIONS[Projection.CaAirDistrict], coordinates)
+    const shapePoint = [projectedCoordinates[0], projectedCoordinates[1]];
+    const fileName = 'geojson/ca_air_districts.json'
+    const airDistrict = findFeature(shapePoint, fileName)
+    return airDistrict
+}
+
+const getCleanCitiesCoalitionFeature = (coordinates: number[]) => {
+    const projectedCoordinates = proj4.default(PROJECTIONS[Projection.CleanCitiesCoalition], coordinates)
+    const shapePoint = [projectedCoordinates[0], projectedCoordinates[1]];
+    const fileName = 'geojson/clean_cities_coalition.json'
+    const coalition = findFeature(shapePoint, fileName)
+    return coalition
+}
+
 const generatePDF = (address: string, censusTractData: any) => {
     const doc = new PDFDocument.default();
 
@@ -74,7 +94,7 @@ const generatePDF = (address: string, censusTractData: any) => {
     doc.text(`\n`)
     doc.text(`Environmental Factors:`)
     doc.text(`\n`)
-    doc.text(`According to CalEnviroScreen 4.0 the site you're looking at has the following characteristics on a scale of 0-100 where 100 is the most burdened and 0 is the least. Sites with lower numbers have better health and environmental indicators than sites with higher numbers. The higher the number the more that indicator is a problem for the state and community, and the greater of a priority it will be for funding in environmental clean-up programs. \n`)
+    doc.text(`According to CalEnviroScreen 4.0 the site you're looking at has the following characteristics on a scale of 0-100 where 100 is the most burdened and 0 is the least. Sites with lower numbers have better health and environmental indicators than sites with higher numbers. A higher number means that indicator is a problem for the state and community, and the greater of a priority it will be for funding in environmental clean-up programs. \n`)
     doc.text(`\n`)
     doc.text(`Population: ${censusTractData.population}`)
     doc.text(`Disadvantaged community score (DAC): ${censusTractData.DACSCORE}`)
