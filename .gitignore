@@ -1,6 +1,6 @@
 # unflappy specific:
 .env
-dac.json
+geojson/
 build/
 
 # other 

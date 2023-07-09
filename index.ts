@@ -4,6 +4,7 @@ import * as fs from 'fs'
 import * as proj4 from 'proj4'
 import * as axios from 'axios'
 import * as PDFDocument from 'pdfkit'
+import { PROJECTIONS, Projection } from './projections'
 
 const token = process.env.MAPBOX_API_KEY
 const projection = 'PROJCS["WGS 84 / Pseudo-Mercator",GEOGCS["WGS 84",DATUM["WGS_1984",SPHEROID["WGS 84",6378137,298.257223563,AUTHORITY["EPSG","7030"]],AUTHORITY["EPSG","6326"]],PRIMEM["Greenwich",0,AUTHORITY["EPSG","8901"]],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],AXIS["Latitude",NORTH],AXIS["Longitude",EAST],AUTHORITY["EPSG","4326"]],PROJECTION["Mercator_1SP"],PARAMETER["central_meridian",0],PARAMETER["scale_factor",1],PARAMETER["false_easting",0],PARAMETER["false_northing",0],UNIT["metre",1,AUTHORITY["EPSG","9001"]],AXIS["X",EAST],AXIS["Y",NORTH],EXTENSION["PROJ4","+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +wktext  +no_defs"],AUTHORITY["EPSG","3857"]]'
@@ -23,18 +24,44 @@ const isPointInPolygon = (point: number[], polygon: any) => {
 const run = async () => {
     const address = '1001 "I" Street, Sacramento, CA, 95814, USA'
     const coordinates = await getCoordinates(address)
-    const updatedCoordinates = proj4.default(projection, coordinates)
-    const shapePoint = [updatedCoordinates[0], updatedCoordinates[1]];
-    const dac_buffer = fs.readFileSync('./dac.json')
+
+    const censusTract = getDacFeature(coordinates)
+    const loadServingEntity = getElectricLoadServingEntityFeature(coordinates)
+
+    console.log(censusTract)
+    console.log(loadServingEntity)
+
+    generatePDF(address, censusTract.properties)
+}
+
+const findFeature = (shapePoint: number[], fileName: string) => {
+    const buffer = fs.readFileSync(fileName)
     // @ts-ignore
-    const dac_json = JSON.parse(dac_buffer)
-    const features = dac_json.features
-    const censusTract = features.find((feature: { geometry: { coordinates: any; }; }) => {
+    const json = JSON.parse(buffer)
+    const features = json.features
+    const foundFeature = features.find((feature: { geometry: { coordinates: any; }; }) => {
         if (feature.geometry && isPointInPolygon(shapePoint, feature.geometry)) {
             return true
         }
     })
-    generatePDF(address, censusTract.properties)
+    return foundFeature
+}
+
+const getDacFeature = (coordinates: number[]) => {
+    const projectedCoordinates = proj4.default(PROJECTIONS[Projection.DisadvantagedCommunity], coordinates)
+    const shapePoint = [projectedCoordinates[0], projectedCoordinates[1]];
+
+    const dacFileName = 'geojson/dac.json'
+    const censusTract = findFeature(shapePoint, dacFileName)
+    return censusTract
+}
+
+const getElectricLoadServingEntityFeature = (coordinates: number[]) => {
+    const projectedCoordinates = proj4.default(PROJECTIONS[Projection.ElectricLoadServingEntity], coordinates)
+    const shapePoint = [projectedCoordinates[0], projectedCoordinates[1]];
+    const fileName = 'geojson/electric_load_serving_entities.json'
+    const loadEntity = findFeature(shapePoint, fileName)
+    return loadEntity
 }
 
 const generatePDF = (address: string, censusTractData: any) => {
