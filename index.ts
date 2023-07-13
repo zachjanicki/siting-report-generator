@@ -29,11 +29,13 @@ const run = async () => {
     const loadServingEntity = getElectricLoadServingEntityFeature(coordinates)
     const airDistrict = getCaAirDistrictFeature(coordinates)
     const cleanCitiesCoalition = getCleanCitiesCoalitionFeature(coordinates)
+    const caCounty = getCaCountyFeature(coordinates)
 
     console.log(censusTract)
     console.log(loadServingEntity)
     console.log(airDistrict)
     console.log(cleanCitiesCoalition)
+    console.log(caCounty)
 
     generatePDF(address, censusTract.properties)
 }
@@ -80,6 +82,14 @@ const getCleanCitiesCoalitionFeature = (coordinates: number[]) => {
     const projectedCoordinates = proj4.default(PROJECTIONS[Projection.CleanCitiesCoalition], coordinates)
     const shapePoint = [projectedCoordinates[0], projectedCoordinates[1]];
     const fileName = 'geojson/clean_cities_coalition.json'
+    const coalition = findFeature(shapePoint, fileName)
+    return coalition
+}
+
+const getCaCountyFeature = (coordinates: number[]) => {
+    const projectedCoordinates = proj4.default(PROJECTIONS[Projection.CaCounties], coordinates)
+    const shapePoint = [projectedCoordinates[0], projectedCoordinates[1]];
+    const fileName = 'geojson/ca_counties.json'
     const coalition = findFeature(shapePoint, fileName)
     return coalition
 }
