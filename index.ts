@@ -32,16 +32,20 @@ const run = async () => {
     const caCongressionalDistrict = getFeature(coordinates, GeoJsonDataset.CaCongressionalLegislativeDistrict)
     const caSenateDistrict = getFeature(coordinates, GeoJsonDataset.CaSenateLegislativeDistrict)
 
-    console.log(censusTract)
-    console.log(loadServingEntity)
-    console.log(airDistrict)
-    console.log(cleanCitiesCoalition)
-    console.log(caCounty)
-    console.log(caAssemblyDistrict)
-    console.log(caCongressionalDistrict)
-    console.log(caSenateDistrict)
+    const datasets = {
+        censusTract,
+        loadServingEntity,
+        airDistrict,
+        cleanCitiesCoalition,
+        caCounty,
+        caAssemblyDistrict,
+        caCongressionalDistrict,
+        caSenateDistrict
+    }
 
-    generatePDF(address, censusTract.properties)
+    console.log(datasets)
+
+    generatePDF(address, datasets)
 }
 
 const getFeature = (coordinates: number[], dataset: GeoJsonDataset) => {
@@ -64,7 +68,7 @@ const findFeature = (shapePoint: number[], fileName: string) => {
     return foundFeature
 }
 
-const generatePDF = (address: string, censusTractData: any) => {
+const generatePDF = (address: string, datasets: any) => {
     const doc = new PDFDocument.default();
 
     doc.pipe(fs.createWriteStream('output.pdf'));
@@ -74,11 +78,33 @@ const generatePDF = (address: string, censusTractData: any) => {
     doc.text(`\n`)
     doc.text(`Environmental Factors:`)
     doc.text(`\n`)
-    doc.text(`According to CalEnviroScreen 4.0 the site you're looking at has the following characteristics on a scale of 0-100 where 100 is the most burdened and 0 is the least. Sites with lower numbers have better health and environmental indicators than sites with higher numbers. A higher number means that indicator is a problem for the state and community, and the greater of a priority it will be for funding in environmental clean-up programs. \n`)
+    doc.text(`According to CalEnviroScreen 4.0 this site has the following characteristics on a scale of 0-100 where 100 is the most burdened and 0 is the least. Sites with lower numbers have better health and environmental indicators than sites with higher numbers. A higher number means that indicator is a problem for the state and community, and the greater of a priority it will be for funding in environmental clean-up programs. \n`)
     doc.text(`\n`)
-    doc.text(`Population: ${censusTractData.population}`)
-    doc.text(`Disadvantaged community score (DAC): ${censusTractData.DACSCORE}`)
-    doc.text(`EJ index for PM2.5 in the air: ${censusTractData.pm25}`)
+    doc.text(`Population: ${datasets?.censusTract?.properties.population}`)
+    doc.text(`Disadvantaged community score (DAC): ${datasets?.censusTract?.properties.DACSCORE}`)
+    doc.text(`EJ index for PM2.5 in the air: ${datasets?.censusTract?.properties.pm25}`)
+    doc.text('\n')
+
+    doc.text(`Utility: ${datasets.loadServingEntity.properties['Utility']}`)
+    doc.text(`\n`)
+
+    doc.text(`Air quality management district: ${datasets.airDistrict.properties['NAME']}`)
+    doc.text(`\n`)
+
+    doc.text(`Clean cities coalition: ${datasets.cleanCitiesCoalition.properties['Name']}`)
+    doc.text(`\n`)
+
+    doc.text(`County: ${datasets.caCounty.properties['CountyName']}`)
+    doc.text(`\n`)
+
+    doc.text(`California assembly district: ${datasets.caAssemblyDistrict.properties['AssemblyDi']}`)
+    doc.text(`\n`)
+
+    doc.text(`Congressional district: ${datasets.caCongressionalDistrict.properties['CongDistri']}`)
+    doc.text(`\n`)
+
+    doc.text(`Senate district: ${datasets.caSenateDistrict.properties['SenateDist']}`)
+    doc.text(`\n`)
     doc.end();
 }
 
