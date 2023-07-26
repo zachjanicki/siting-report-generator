@@ -2,6 +2,7 @@
 .env
 geojson/
 build/
+csvs/
 
 # other 
 .DS_STORE

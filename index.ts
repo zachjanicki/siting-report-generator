@@ -4,7 +4,8 @@ import * as fs from 'fs'
 import * as proj4 from 'proj4'
 import * as axios from 'axios'
 import * as PDFDocument from 'pdfkit'
-import { PROJECTIONS, GEOJSON_FILES, GeoJsonDataset } from './datasets'
+import { PROJECTIONS, GEOJSON_FILES, GeoJsonDataset, CSVDatasets, CSV_FILES } from './datasets'
+import { readCSV } from './csv_parser'
 
 const token = process.env.MAPBOX_API_KEY
 
@@ -27,6 +28,7 @@ const run = async () => {
     const loadServingEntity = getFeature(coordinates, GeoJsonDataset.ElectricLoadServingEntity)
     const airDistrict = getFeature(coordinates, GeoJsonDataset.CaAirDistrict)
     const cleanCitiesCoalition = getFeature(coordinates, GeoJsonDataset.CleanCitiesCoalition)
+    const cleanCitiesContact = await getCleanCitiesContact(cleanCitiesCoalition.properties['Name'])
     const caCounty = getFeature(coordinates, GeoJsonDataset.CaCounties)
     const caAssemblyDistrict = getFeature(coordinates, GeoJsonDataset.CaAssemblyDistrict)
     const caCongressionalDistrict = getFeature(coordinates, GeoJsonDataset.CaCongressionalLegislativeDistrict)
@@ -37,15 +39,22 @@ const run = async () => {
         loadServingEntity,
         airDistrict,
         cleanCitiesCoalition,
+        cleanCitiesContact,
         caCounty,
         caAssemblyDistrict,
         caCongressionalDistrict,
         caSenateDistrict
     }
 
-    console.log(datasets)
-
     generatePDF(address, datasets)
+}
+
+const getCleanCitiesContact = async (coalitionName: string) => {
+    const contacts = await readCSV(CSV_FILES[CSVDatasets.CleanCitiesCoalition])
+    const cleanCitiesContact = contacts.find((contact) => {
+        return contact['Coalition'] === coalitionName
+    })
+    return cleanCitiesContact
 }
 
 const getFeature = (coordinates: number[], dataset: GeoJsonDataset) => {
@@ -93,6 +102,8 @@ const generatePDF = (address: string, datasets: any) => {
 
     doc.text(`Clean cities coalition: ${datasets.cleanCitiesCoalition.properties['Name']}`)
     doc.text(`\n`)
+    doc.text(`The point of contact for ${datasets.cleanCitiesCoalition.properties['Name']} is ${datasets.cleanCitiesContact['First Name']} ${datasets.cleanCitiesContact['Last Name']}. They can be reached by email at ${datasets.cleanCitiesContact['Email']} or by office phone at ${datasets.cleanCitiesContact['Phone - Office']}.`)
+    doc.text(`The headquarters of this clean cities coalition is at ${datasets.cleanCitiesContact['Street Address 1']} ${datasets.cleanCitiesContact['City']}, ${datasets.cleanCitiesContact['State']} ${datasets.cleanCitiesContact['ZIP Code']}`)
 
     doc.text(`County: ${datasets.caCounty.properties['CountyName']}`)
     doc.text(`\n`)
