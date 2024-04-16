@@ -7,4 +7,4 @@ To run a sample report: `npm start`
 - run `npm install` to install all relevant packages
 
 ## Data requirements
-- For the proof of concept to run successfully, a `dac.json` file must exist in the `unflappy/` directory
+- For the proof of concept to run successfully, a `dac.json` file must exist in the root directory
